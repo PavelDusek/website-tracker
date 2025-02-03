@@ -30,8 +30,9 @@ def differs(text: str, cache: Path) -> bool:
     return store
 
 if __name__ == "__main__":
-    toml_path = Path("sites.toml")
-    cache_dir = Path("cache")
+    work_dir = Path(".")
+    toml_path = work_dir / Path("sites.toml")
+    cache_dir = work_dir / Path("cache")
     sites = toml.load(toml_path)
 
     for sitename, site in sites.items():
