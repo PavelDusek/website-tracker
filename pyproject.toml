@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "website-tracker"
+version = "0.1.0"
+description = "Tracks changes on a list of websites."
+authors = ["Pavel Dusek <pavel.dusek@gmail.com>"]
+license = "GNU GPL-3.0"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
