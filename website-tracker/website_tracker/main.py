@@ -1,14 +1,13 @@
 # coding: utf-8
 import requests
 import toml
-import difflib
 import re
 import os
 
 from pathlib import Path
 from icecream import ic
 from rich import print
-
+from bs4 import BeautifulSoup
 
 def remove_trash( text: str, params: dict) -> str:
     if 'regex' in params.keys():
@@ -17,17 +16,31 @@ def remove_trash( text: str, params: dict) -> str:
             text = re.sub(r, "", text)
     return text
 
-def differs(text: str, cache: Path) -> bool:
+def differs(text: str, cache: Path, url: str) -> bool:
     store = False
     with open(cache) as f:
         old = f.read()
         if old != new:
+            difference = find_difference(old, new)
             print(f"[green]{sitename}[/green] [red]changed!!![/red]")
-            diff = difflib.ndiff(old, new)
-            #ic(diff)
-            #print(''.join(diff), end="")
+            print(f"[blue]{url}[/blue]")
+            ic(difference)
             store = True
     return store
+
+def find_difference( old: str, new: str) -> list:
+    difference = []
+    for o, n in zip(old, new):
+        if o != n:
+            difference.append( (o, n) )
+    return difference
+
+def clean_text(text: str) -> str:
+    clean = []
+    for line in text.splitlines():
+        if line := line.strip():
+            clean.append( line.replace("\t","") )
+    return "\n".join(clean)
 
 if __name__ == "__main__":
     work_dir = Path(".")
@@ -36,6 +49,8 @@ if __name__ == "__main__":
     sites = toml.load(toml_path)
 
     for sitename, site in sites.items():
+        goto = site.get('goto', site['url'])
+        print(f"Checking [blue]{sitename}[/blue]...")
         store = False
         path = cache_dir / Path(f"{sitename}.html")
         #ic(path)
@@ -43,11 +58,15 @@ if __name__ == "__main__":
         #ic(oldpath)
         req = requests.get(site['url'])
         new = req.text
+        if site.get('strip_html', False):
+            soup = BeautifulSoup(new, "html.parser")
+            new = soup.find("body").get_text().strip()
+            new = clean_text(new)
         new = remove_trash(new, site)
 
         #ic(new)
         if path.exists():
-            store = differs(text = new, cache = path)
+            store = differs(text = new, cache = path, url = goto)
         else:
             store = True
 
