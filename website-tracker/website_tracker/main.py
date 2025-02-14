@@ -24,7 +24,7 @@ def differs(text: str, cache: Path, url: str) -> bool:
             difference = find_difference(old, new)
             print(f"[green]{sitename}[/green] [red]changed!!![/red]")
             print(f"[blue]{url}[/blue]")
-            ic(difference)
+            #ic(difference)
             store = True
     return store
 
@@ -77,3 +77,4 @@ if __name__ == "__main__":
                 os.rename(path, oldpath)
             with open(path, "w") as f:
                 f.write(new)
+    input("") #wait for any key to quit
