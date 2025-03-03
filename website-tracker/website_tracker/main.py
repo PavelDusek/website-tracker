@@ -56,7 +56,11 @@ if __name__ == "__main__":
         #ic(path)
         oldpath = cache_dir / Path(f"{sitename}_old.html")
         #ic(oldpath)
-        req = requests.get(site['url'])
+        try:
+            req = requests.get(site['url'])
+        except requests.exceptions.ConnectionError as e:
+            ic(e)
+            continue
         new = req.text
         if site.get('strip_html', False):
             soup = BeautifulSoup(new, "html.parser")
