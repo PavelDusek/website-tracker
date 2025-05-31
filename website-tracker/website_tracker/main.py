@@ -1,35 +1,46 @@
 #!/usr/bin/env python3
 # coding: utf-8
-import requests
-import toml
+
+"""
+Tracks changes on a list of websites.
+Needs sites.toml file.
+"""
+
 import re
 import os
-
+import logging
 from pathlib import Path
-from icecream import ic
-from rich import print
+
+import httpx
+import toml
+import rich
 from bs4 import BeautifulSoup
 
 def remove_trash( text: str, params: dict) -> str:
+    """ Change the html text with regex so that only informative changes are tracked. """
+
     if 'regex' in params.keys():
-        for r in site['regex']:
+        for r in params['regex']:
             #change the html text with regex so that only informative changes are tracked
             text = re.sub(r, "", text)
     return text
 
-def differs(text: str, cache: Path, url: str) -> bool:
-    store = False
-    with open(cache) as f:
+def differs(text: str, cache: Path, sitename: str, url: str) -> bool:
+    """ Tests if the text differs from the cached versions. """
+
+    texts_differ = False
+    with open(cache, encoding="utf-8") as f:
         old = f.read()
-        if old != new:
-            difference = find_difference(old, new)
-            print(f"[green]{sitename}[/green] [red]changed!!![/red]")
-            print(f"[blue]{url}[/blue]")
-            #ic(difference)
-            store = True
-    return store
+        if old != text:
+            #difference = find_difference(old, text)
+            rich.print(f"[green]{sitename}[/green] [red]changed!!![/red]")
+            rich.print(f"[blue]{url}[/blue]")
+            texts_differ = True
+    return texts_differ
 
 def find_difference( old: str, new: str) -> list:
+    """ Finds difference between two texts. """
+
     difference = []
     for o, n in zip(old, new):
         if o != n:
@@ -37,49 +48,68 @@ def find_difference( old: str, new: str) -> list:
     return difference
 
 def clean_text(text: str) -> str:
+    """ Removes whitespace characters. """
+
     clean = []
     for line in text.splitlines():
         if line := line.strip():
             clean.append( line.replace("\t","") )
     return "\n".join(clean)
 
+def get_site(url: str) -> str:
+    """ Performs http request and retrieves html. """
+
+    try:
+        req = httpx.get(url)
+        return req.text
+    except httpx.ConnectError as e:
+        logging.error(e)
+        try:
+            logging.warning("Trying to use http request without SSL verification.")
+            req = httpx.get(url, verify = False)
+            return req.text
+        except httpx.ConnectError as e2:
+            logging.error(e2)
+            logging.error(f"Connection to {url} failed")
+            return ""
+
+
 if __name__ == "__main__":
     work_dir = Path(".")
     toml_path = work_dir / Path("sites.toml")
     cache_dir = work_dir / Path("cache")
     sites = toml.load(toml_path)
+    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.INFO)
+    #logging.basicConfig(level=logging.DEBUG)
 
     for sitename, site in sites.items():
         goto = site.get('goto', site['url'])
-        print(f"Checking [blue]{sitename}[/blue]...")
-        store = False
+        rich.print(f"Checking [blue]{sitename}[/blue]...")
+        store, new = False, ""
         path = cache_dir / Path(f"{sitename}.html")
-        #ic(path)
+        logging.debug(path)
         oldpath = cache_dir / Path(f"{sitename}_old.html")
-        #ic(oldpath)
-        try:
-            req = requests.get(site['url'])
-        except requests.exceptions.ConnectionError as e:
-            ic(e)
-            continue
-        new = req.text
+        logging.debug(oldpath)
+
+        new = get_site(site['url'])
         if site.get('strip_html', False):
             soup = BeautifulSoup(new, "html.parser")
             new = soup.find("body").get_text().strip()
             new = clean_text(new)
         new = remove_trash(new, site)
+        logging.debug(new)
 
-        #ic(new)
         if path.exists():
-            store = differs(text = new, cache = path, url = goto)
+            store = differs(text = new, cache = path, sitename = sitename, url = goto)
         else:
             store = True
 
-        #ic(store)
+        logging.info(store)
         if store:
-            #storing html in a cache file
+            logging.info("storing html in a cache file")
             if path.exists():
                 os.rename(path, oldpath)
-            with open(path, "w") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 f.write(new)
     input("") #wait for any key to quit
