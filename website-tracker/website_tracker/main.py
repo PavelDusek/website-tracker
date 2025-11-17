@@ -33,8 +33,14 @@ def differs(text: str, cache: Path, sitename: str, url: str) -> bool:
     texts_differ = False
     with open(cache, encoding="utf-8") as f:
         old = f.read()
+        # compare texts ignoring non-printable characters
+        old = old.replace(" ", "").replace("\r", "").replace("\n", "")
+        text = text.replace(" ", "").replace("\r", "").replace("\n", "")
         if old != text:
             # difference = find_difference(old, text)
+            logging.debug(f"{sitename} and cache differs")
+            logging.debug(text)
+            logging.debug(old)
             rich.print(f"[green]{sitename}[/green] [red]changed!!![/red]")
             rich.print(f"[blue]{url}[/blue]")
             texts_differ = True
@@ -85,8 +91,8 @@ if __name__ == "__main__":
     cache_dir = work_dir / Path("cache")
     sites = toml.load(toml_path)
     logging.basicConfig(level=logging.WARNING)
-    logging.basicConfig(level=logging.INFO)
-    # logging.basicConfig(level=logging.DEBUG)
+    #logging.basicConfig(level=logging.INFO)
+    #logging.basicConfig(level=logging.DEBUG)
 
     for sitename, site in sites.items():
         goto = site.get("goto", site["url"])
