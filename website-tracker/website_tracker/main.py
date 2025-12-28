@@ -70,8 +70,18 @@ def clean_text(text: str) -> str:
 def get_site(url: str) -> str:
     """Performs http request and retrieves html."""
 
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.google.com/",
+    }
     try:
-        req = httpx.get(url)
+        req = httpx.get(url, headers=headers)
         return req.text
     except httpx.ConnectError as e:
         logging.error(e)
