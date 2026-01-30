@@ -95,6 +95,18 @@ def get_site(url: str) -> str:
             logging.error(f"Connection to {url} failed")
             return ""
 
+def show_difference(sitename: str, cache_dir: Path) -> None:
+    """Asks whether to show differences and uses delta to display them."""
+    rich.print(f"Show difference for [blue]{sitename}[/blue]? [green](Y/N)[/green]")
+    response = input("").strip()
+    if response.lower() in ["y", "yes"]:
+        cmd = [
+                "delta",
+                str(Path( cache_dir / f"{sitename}.html")),
+                str(Path( cache_dir / f"{sitename}_old.html")),
+        ]
+        rich.print(" ".join(cmd))
+        subprocess.run(cmd)
 
 if __name__ == "__main__":
     work_dir = Path(".")
@@ -130,9 +142,12 @@ if __name__ == "__main__":
 
         logging.info(store)
         if store:
+            changed_sites.append(sitename)
             logging.info("storing html in a cache file")
             if path.exists():
                 os.rename(path, oldpath)
             with open(path, "w", encoding="utf-8") as f:
                 f.write(new)
-    input("")  # wait for any key to quit
+
+    for sitename in changed_sites:
+        show_difference(sitename = sitename, cache_dir = cache_dir)
