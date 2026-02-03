@@ -97,9 +97,9 @@ def get_site(url: str) -> str:
 
 def show_difference(sitename: str, cache_dir: Path) -> None:
     """Asks whether to show differences and uses delta to display them."""
-    rich.print(f"Show difference for [blue]{sitename}[/blue]? [green](Y/N)[/green]")
+    rich.print(f"Show difference for [blue]{sitename}[/blue]? [green](Y/n)[/green]")
     response = input("").strip()
-    if response.lower() in ["y", "yes"]:
+    if not response.lower() in ["n", "no"]:
         cmd = [
                 "delta",
                 str(Path( cache_dir / f"{sitename}.html")),
@@ -151,3 +151,4 @@ if __name__ == "__main__":
 
     for sitename in changed_sites:
         show_difference(sitename = sitename, cache_dir = cache_dir)
+    _ = input("")
