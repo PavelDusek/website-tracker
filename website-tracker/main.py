@@ -95,7 +95,7 @@ def get_site(url: str) -> str:
             logging.error(f"Connection to {url} failed")
             return ""
 
-def show_difference(sitename: str, cache_dir: Path) -> None:
+def show_difference(sitename: str, cache_dir: Path, url: str) -> None:
     """Asks whether to show differences and uses delta to display them."""
     rich.print(f"Show difference for [blue]{sitename}[/blue]? [green](Y/n)[/green]")
     response = input("").strip()
@@ -107,6 +107,7 @@ def show_difference(sitename: str, cache_dir: Path) -> None:
         ]
         rich.print(" ".join(cmd))
         subprocess.run(cmd)
+        rich.print(f"[blue]{url}[/blue]")
 
 if __name__ == "__main__":
     work_dir = Path(".")
@@ -117,7 +118,7 @@ if __name__ == "__main__":
     #logging.basicConfig(level=logging.INFO)
     #logging.basicConfig(level=logging.DEBUG)
 
-    changed_sites = []
+    changed_sites = {}
     for sitename, site in sites.items():
         goto = site.get("goto", site["url"])
         rich.print(f"Checking [blue]{sitename}[/blue]...")
@@ -142,13 +143,17 @@ if __name__ == "__main__":
 
         logging.info(store)
         if store:
-            changed_sites.append(sitename)
+            changed_sites[sitename] = site
             logging.info("storing html in a cache file")
             if path.exists():
                 os.rename(path, oldpath)
             with open(path, "w", encoding="utf-8") as f:
                 f.write(new)
 
-    for sitename in changed_sites:
-        show_difference(sitename = sitename, cache_dir = cache_dir)
+    for sitename, site in changed_sites.items():
+        show_difference(
+                sitename = sitename,
+                cache_dir = cache_dir,
+                url = site.get("goto", site["url"])
+        )
     _ = input("")
