@@ -1,19 +1,14 @@
-[tool.poetry]
+[project]
 name = "website-tracker"
 version = "0.1.0"
 description = "Tracks changes on a list of websites."
 authors = ["Pavel Dusek <pavel.dusek@gmail.com>"]
-license = "GNU GPL-3.0"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.13"
-rich = "^13.9.4"
-httpx = "^0.28.1"
-toml = "^0.10.2"
-bs4 = "^0.0.2"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+license = "GNU GPL-3.0"
+requires-python = ">=3.13"
+dependencies = [
+    "bs4>=0.0.2",
+    "httpx>=0.28.1",
+    "rich>=15.0.0",
+    "toml>=0.10.2",
+]
