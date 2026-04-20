@@ -43,7 +43,7 @@ def differs(text: str, cache: Path, sitename: str, url: str) -> bool:
             logging.debug(text)
             logging.debug(old)
             rich.print(f"[green]{sitename}[/green] [red]changed!!![/red]")
-            rich.print(f"[blue]{url}[/blue]")
+            rich.print(f"[blue]{url}[/blue]\n")
             texts_differ = True
     return texts_differ
 
@@ -107,7 +107,7 @@ def show_difference(sitename: str, cache_dir: Path, url: str) -> None:
         ]
         rich.print(" ".join(cmd))
         subprocess.run(cmd)
-        rich.print(f"[blue]{url}[/blue]")
+        rich.print(f"[blue]{url}[/blue]\n")
 
 if __name__ == "__main__":
     work_dir = Path(".")
